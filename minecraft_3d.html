@@ -64,8 +64,8 @@
         globalThis.writeMap =  function(t,map){
             var dum = -1;
             var dum2 = '';
-            for (var i = 0; i < 100; i++) {
-                for (var j = 0; j < 100; j++) {
+            for (var i = 0; i < 50; i++) {
+                for (var j = 0; j < 50; j++) {
                     for (var k = 0; k < 100; k++) {
                         if(dum != -1){
                             dum2 += String.fromCharCode(65 + dum*7+map[i][j][k]);
@@ -81,7 +81,7 @@
         }
         globalThis.readMap =  function(){
             readedmap = readUserData('data');
-            setTimeout(mapload,100);
+            setTimeout(mapload,50);
         }
 
         globalThis.loadMap =  function(){
@@ -92,8 +92,8 @@
                     dum2.push((readedmap.charCodeAt(i)-65)%7);
                 }
                 var count = 0;
-                for (var i = 0; i < 100; i++) {
-                    for (var j = 0; j < 100; j++) {
+                for (var i = 0; i < 50; i++) {
+                    for (var j = 0; j < 50; j++) {
                         for (var k = 0; k < 100; k++) {
                             surburmap[i][j][k] = dum2[count];
                             count+=1;   
@@ -125,18 +125,19 @@
             {x:50,y:50,z:50},
             {x:-50,y:50,z:50}],origin:{x:0,y:0,z:0}};//기준이 되는 0,0,0위치의 블록, 위치는 카메라와의 상대 거리
 
-        var bfs_list = [];
-        var randerrange = 15;
-        var surburmap = new Array(100);
+        var bfs_list = new Array(100000);
+        var bfs_listcount = 0;
+        var randerblock = 10000;
+        var surburmap = new Array(50);
         var readedmap;
         var surburmap_change = [];
         var surburmap_load_once = 0;
             
-        var map = new Array(100);
-        for (var i = 0; i < 100; i++) {
-            map[i] = new Array(100);
-            surburmap[i] = new Array(100);
-            for (var j = 0; j < 100; j++) {
+        var map = new Array(50);
+        for (var i = 0; i < 50; i++) {
+            map[i] = new Array(50);
+            surburmap[i] = new Array(50);
+            for (var j = 0; j < 50; j++) {
                 map[i][j] = new Array(100);
                 surburmap[i][j] = new Array(100);
                 for (var k = 0; k < 100; k++) {
@@ -145,30 +146,70 @@
             }
         }
         
-        var map2 = new Array(100);
-        for (var i = 0; i < 100; i++) {
-            map2[i] = new Array(100);
-            for (var j = 0; j < 100; j++) {
+        var map2 = new Array(50);
+        for (var i = 0; i < 50; i++) {
+            map2[i] = new Array(50);
+            for (var j = 0; j < 50; j++) {
                 map2[i][j] = new Array(100);
                 for (var k = 0; k < 100; k++) {
                     map2[i][j][k] = 0;
                 }
             }
         }
+        var map2_count = 0;
+
+        function sigmoid(x){
+            return 1 / (1 + Math.exp(-x));
+        }
 
         function newmap(){
+            var seed =  getRandomInt(1000,9999);
+            var seed2 =  getRandomInt(1000,9999);
+            var seed3 =  getRandomInt(1000,9999);
+            var seed4 =  getRandomInt(1000,9999);
+            var seed5 =  getRandomInt(1000,9999);
+            var seed6 =  getRandomInt(1000,9999);
+            var seed7 =  getRandomInt(1000,9999);
+            var seed8 =  getRandomInt(1000,9999);
+
             for (var k = 0; k < 100; k++) {
-                for (var i = 0; i < 100; i++) {
-                    for (var j = 0; j < 100; j++) {
+                for (var i = 0; i < 50; i++) {
+                    for (var j = 0; j < 50; j++) {
                         map[i][j][k] = 0;
-                        if(k == 55){
+                        var dum = Math.round(Math.sin((i+seed)/10)*2+Math.sin((j+seed)/10)*2+Math.sin((i+seed2)/5)*1+Math.sin((j+seed2)/5)*1);
+                        var dum2 = Math.round(Math.sin((i+seed3)*5)*2+Math.sin((j+seed3)*5)*2+Math.sin((i+seed4)*2)*1+Math.sin((j+seed4)*2)*1);
+                        var dum3 = (Math.sin((i+seed5)/3)*2+Math.sin((j+seed5)/3)*2+Math.sin((i+seed6)/5)*1+Math.sin((j+seed6)/5)*1)+(((k-dum)/3)**0.9);
+                        var dum4 = (Math.sin((i+seed7)/3)*2+Math.sin((j+seed7)/3)*2+Math.sin((i+seed8)/5)*1+Math.sin((j+seed8)/5)*1)+k/10;
+                        //var dum2 = (Math.sin((i+seed*10)/2)*(1+(Math.sin(seed2)+1))+Math.sin((j+seed*10)/2)*(1+(Math.sin(seed3)+1))+Math.sin((k+seed*10)/2)*(1+(Math.sin(seed4)+1)));
+                        
+                        //console.log(dum2);
+
+                        if(k == 60+dum){
                             map[i][j][k] = 1;
                         }
-                        if(k > 55){
+                        if(k > 60+dum){
                             map[i][j][k] = 2;
+                            if(k > 65+dum/2){
+                                map[i][j][k] = 3;
+                                if(!getRandomInt(0,30)){
+                                    map[i][j][k] = getRandomInt(4,7);
+                                }
+                            }
                         }
-                        if(!getRandomInt(0,50)){
-                            map[i][j][k] = getRandomInt(0,7);
+                        if(Math.abs(dum-dum2) < 2){
+                            if(k < 60 + dum + (2 - Math.abs(dum-dum2)) && k > 60+dum - (2 - Math.abs(dum-dum2))){
+                                map[i][j][k] = 5;
+                            }
+                        }
+                        if(k == 60+dum){
+                            if(dum3 > 16){
+                                map[i][j][k] = 4;
+                            }
+                        }
+                        if(k <= 60+dum){
+                            if(dum4 > 10){
+                                map[i][j][k] = 6;
+                            }
                         }
                     }
                 }
@@ -186,7 +227,7 @@
             surburmap_load_once = 1;
             
             readMap();
-            setInterval(readMap,2000+getRandomInt(-100,100));
+            setInterval(readMap,10000+getRandomInt(-1000,1000));
 
             document.addEventListener('keydown', (event) => {
                     if (event.key == 's') {
@@ -208,10 +249,10 @@
                         key.ctrl = 1;
                     }
                     if (event.key == '=') {
-                        randerrange += 1;
+                        randerblock += 500;
                     }
                     if (event.key == '-') {
-                        randerrange -= 1;
+                        randerblock -= 500;
                     }
                     if (event.key == '1') {
                         pl_item = 1;
@@ -305,10 +346,10 @@
                         if(dum > -500){
                             gijunanglechange(1,-camera.y);
                             gijunanglechange(0,-camera.x);
-                            pl_blsu[map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)]-1]+=1;
-                            map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
-                            surburmap[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
-                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+50-0.5),y:Math.ceil(-gijun.origin.y/100+50-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:0});
+                            pl_blsu[map[Math.ceil(-gijun.origin.x/1002550-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)]-1]+=1;
+                            map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+25-0.5),y:Math.ceil(-gijun.origin.y/100+25-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:0});
                             gijunanglechange(0,camera.x);
                             gijunanglechange(1,camera.y);
                         }
@@ -325,9 +366,9 @@
                             dum += 10;
                             gijunanglechange(1,-camera.y);
                             gijunanglechange(0,-camera.x);
-                            map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = pl_item;
-                            surburmap[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = pl_item;
-                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+50-0.5),y:Math.ceil(-gijun.origin.y/100+50-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:pl_item});
+                            map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = pl_item;
+                            surburmap[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = pl_item;
+                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+25-0.5),y:Math.ceil(-gijun.origin.y/100+25-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:pl_item});
                             gijunanglechange(0,camera.x);
                             gijunanglechange(1,camera.y);
                             pl_blsu[pl_item-1] -= 1;
@@ -339,9 +380,9 @@
                             gijun.origin.x += dum;
                             gijunanglechange(1,-camera.y);
                             gijunanglechange(0,-camera.x);
-                            map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
-                            surburmap[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
-                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+50-0.5),y:Math.ceil(-gijun.origin.y/100+50-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:0});
+                            map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+25-0.5),y:Math.ceil(-gijun.origin.y/100+25-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:0});
                             pl_blsu[pl_item-1] += 1;
                             gijunanglechange(0,camera.x);
                             gijunanglechange(1,camera.y);
@@ -476,35 +517,39 @@
             else{
                 drawgijunpoint_tri(0,1,5,'#FF00FF');
                 drawgijunpoint_tri(0,5,4,'#FF00FF');
-            }*/
-            
-            for (var i = bfs_list.length-1; i >-1; i--) {
-                if(map[Math.ceil(bfs_list[i].x)][Math.ceil(bfs_list[i].y)][Math.ceil(bfs_list[i].z)] == 1){
-                    renderblock(bfs_list[i].x,bfs_list[i].y,bfs_list[i].z,'#A5DF00','#86B404');
+            }
+            */
+            for (var i = bfs_listcount-1; i >-1; i--) {
+                var dumx = bfs_list[i].x;
+                var dumy = bfs_list[i].y;
+                var dumz = bfs_list[i].z;
+                if(map[Math.ceil(dumx)][Math.ceil(dumy)][Math.ceil(dumz)] == 1){
+                    renderblock(dumx,dumy,dumz,'#A5DF00','#86B404');
                 }
-                else if(map[Math.ceil(bfs_list[i].x)][Math.ceil(bfs_list[i].y)][Math.ceil(bfs_list[i].z)] == 2){
-                    renderblock(bfs_list[i].x,bfs_list[i].y,bfs_list[i].z,'#DF7401','#B45F04');
+                else if(map[Math.ceil(dumx)][Math.ceil(dumy)][Math.ceil(dumz)] == 2){
+                    renderblock(dumx,dumy,dumz,'#DF7401','#B45F04');
                 }
-                else if(map[Math.ceil(bfs_list[i].x)][Math.ceil(bfs_list[i].y)][Math.ceil(bfs_list[i].z)] == 3){
-                    renderblock(bfs_list[i].x,bfs_list[i].y,bfs_list[i].z,'#6E6E6E','#585858');
+                else if(map[Math.ceil(dumx)][Math.ceil(dumy)][Math.ceil(dumz)] == 3){
+                    renderblock(dumx,dumy,dumz,'#6E6E6E','#585858');
                 }
-                else if(map[Math.ceil(bfs_list[i].x)][Math.ceil(bfs_list[i].y)][Math.ceil(bfs_list[i].z)] == 4){
-                    renderblock(bfs_list[i].x,bfs_list[i].y,bfs_list[i].z,'#DF0101','#B40404');
+                else if(map[Math.ceil(dumx)][Math.ceil(dumy)][Math.ceil(dumz)] == 4){
+                    renderblock(dumx,dumy,dumz,'#DF0101','#B40404');
                 }
-                else if(map[Math.ceil(bfs_list[i].x)][Math.ceil(bfs_list[i].y)][Math.ceil(bfs_list[i].z)] == 5){
-                    renderblock(bfs_list[i].x,bfs_list[i].y,bfs_list[i].z,'#01DF01','#04B404');
+                else if(map[Math.ceil(dumx)][Math.ceil(dumy)][Math.ceil(dumz)] == 5){
+                    renderblock(dumx,dumy,dumz,'#01DF01','#04B404');
                 }
-                else if(map[Math.ceil(bfs_list[i].x)][Math.ceil(bfs_list[i].y)][Math.ceil(bfs_list[i].z)] == 6){
-                    renderblock(bfs_list[i].x,bfs_list[i].y,bfs_list[i].z,'#013ADF','#0431B4');
+                else if(map[Math.ceil(dumx)][Math.ceil(dumy)][Math.ceil(dumz)] == 6){
+                    renderblock(dumx,dumy,dumz,'#013ADF','#0431B4');
                 }
             }
+            
             
             drowbar();
         }
 
         function renderblock(x,y,z,c1,c2){
-            x -= 50;
-            y -= 50;
+            x -= 25;
+            y -= 25;
             z -= 50;
 
             var x2,y2,z2;
@@ -619,17 +664,38 @@
         }
 
         function bfsstart(){
-            for (var i = 0; i < 100; i++) {
-                for (var j = 0; j < 100; j++) {
-                    for (var k = 0; k < 100; k++) {
-                        map2[i][j][k] = 0;
-                    }
-                }
+            map2_count += 1;
+            if(map2_count > 100000){
+                map2_count = 0;
             }
-            bfs_list = [];
+            bfs_listcount = 0;
             gijunanglechange(1,-camera.y);
             gijunanglechange(0,-camera.x);
-            var bfs_list2 = [[-(gijun.origin.x+50)/100+50,-(gijun.origin.y+50)/100+50,-(gijun.origin.z+50)/100+50,randerrange]];
+            var bfs_list2 = [[-(gijun.origin.x+50)/100+25,-(gijun.origin.y+50)/100+25,-(gijun.origin.z+50)/100+50,10,"111111"]];
+            var plx = -(gijun.origin.x+50)/100+25;
+            var ply = -(gijun.origin.y+50)/100+25;
+            gijunanglechange(0,camera.x);
+            gijunanglechange(1,camera.y);
+
+            var absx = camera.x%(Math.PI*2);
+            if(absx < 0){
+                var absx = Math.PI*2- Math.abs(absx);
+            }
+            var notrender;
+            if(absx >= 0 && absx < Math.PI/2){
+                notrender = [-1,-1];
+            }
+            else if(absx>= Math.PI/2 && absx < Math.PI){
+                notrender = [1,-1];
+            }
+            else if(absx >= Math.PI && absx < Math.PI*1.5){
+                notrender = [1,1];
+            }
+            else{
+                notrender = [-1,1];
+            }
+            var randerblock_dum = 0;
+            var dumli = [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]];
             while(bfs_list2.length){
                 var dum = bfs_list2.length;
                 for (var i = 0; i < dum; i++) {
@@ -639,20 +705,32 @@
                     var y = dum2[1];
                     var z = dum2[2];
                     var range = dum2[3];
-
-                    var dumli = [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]]
                     for (var j = 0; j < 6; j++) {
-                        if(range-1 != 0 && x+dumli[j][0] >= 0 && x+dumli[j][0] < 100 && y+dumli[j][1] >= 0 && y+dumli[j][1] < 100 && z+dumli[j][2] >= 0 && z+dumli[j][2] < 100 && map2[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] == 0){
-                            if(map[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] == 0)bfs_list2.push([x+dumli[j][0],y+dumli[j][1],z+dumli[j][2],range-1]);
-                            map2[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] = 1;
-                            map[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] = surburmap[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])];
-                            bfs_list.push({x:Math.ceil(x+dumli[j][0]),y:Math.ceil(y+dumli[j][1]),z:Math.ceil(z+dumli[j][2])});
+                        if(dum2[4][j] == "1" && randerblock > randerblock_dum){
+                            var dumx = Math.ceil(x+dumli[j][0]);
+                            var dumy = Math.ceil(y+dumli[j][1]);
+                            var dumz = Math.ceil(z+dumli[j][2]);
+                            if(dumx >= 0 && dumx < 50 && dumy >= 0 && dumy < 50 && dumz >= 0 && dumz < 100 && map2[dumx][dumy][dumz] !=map2_count){
+                                if(range > 10-7 || !((x+dumli[j][0]-plx)*notrender[0] > 0 && (y+dumli[j][1]-ply)*notrender[1] > 0)){
+                                        
+                                    if(map[dumx][dumy][dumz] == 0){
+                                        var dum3= dum2[4];
+                                        dum3[j-(j%2*2-1)] = '0';
+                                        bfs_list2.push([x+dumli[j][0],y+dumli[j][1],z+dumli[j][2],range-1,dum3]);  
+                                        randerblock_dum+=1;  
+                                    }
+                                    map2[dumx][dumy][dumz] =map2_count;
+                                    map[dumx][dumy][dumz] = surburmap[dumx][dumy][dumz];
+                                    bfs_list[bfs_listcount] = {x:dumx,y:dumy,z:dumz};
+                                    bfs_listcount += 1;
+                                }
+                            }
                         }
+                        
                     }
                 }
             }
-            gijunanglechange(0,camera.x);
-            gijunanglechange(1,camera.y);
+
         }
 
         function gijunanglechange(m,p){
@@ -703,11 +781,11 @@
             gijunanglechange(0,-camera.x);
             var a = 0;
             for (var i = 0; i < 3; i++) {
-                if(map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+50-0.5-0.4)][Math.ceil(-gijun.origin.y/100+50-0.5-0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+50-0.5+0.4)][Math.ceil(-gijun.origin.y/100+50-0.5-0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+50-0.5-0.4)][Math.ceil(-gijun.origin.y/100+50-0.5+0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+50-0.5+0.4)][Math.ceil(-gijun.origin.y/100+50-0.5+0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+25-0.5-0.4)][Math.ceil(-gijun.origin.y/100+25-0.5-0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+25-0.5+0.4)][Math.ceil(-gijun.origin.y/100+25-0.5-0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+25-0.5-0.4)][Math.ceil(-gijun.origin.y/100+25-0.5+0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+25-0.5+0.4)][Math.ceil(-gijun.origin.y/100+25-0.5+0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
             }
             gijunanglechange(0,camera.x);
             return a;
@@ -716,7 +794,7 @@
         function plblocknum(){
             gijunanglechange(1,-camera.y);
             gijunanglechange(0,-camera.x);
-            var a = map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)];
+            var a = map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)];
             gijunanglechange(0,camera.x);
             gijunanglechange(1,camera.y);
             return a;
@@ -757,6 +835,38 @@
                     }
                 }
                 else{
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.y += 1*i;
+                        gijun.origin.x += 1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y += 1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x -= 10 - 1*i;
+                            }
+                            gijun.origin.x -= 10;
+                            break;
+                        }
+                        gijun.origin.y -= 1*i;
+                        gijun.origin.x -= 1*i;
+                    }
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.y += -1*i;
+                        gijun.origin.x += 1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y += -1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x -= 10 - 1*i;
+                            }
+                            gijun.origin.x -= 10;
+                            break;
+                        }
+                        gijun.origin.y -= -1*i;
+                        gijun.origin.x -= 1*i;
+                    }
                     gijun.origin.x += 10;
                 }
                 
@@ -769,7 +879,39 @@
                     }
                 }
                 else{
-                    gijun.origin.y -= 10;
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.x += 1*i;
+                        gijun.origin.y += -1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x += 1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y -= -10 + 1*i;
+                            }
+                            gijun.origin.y -= -10;
+                            break;
+                        }
+                        gijun.origin.x -= 1*i;
+                        gijun.origin.y -= -1*i;
+                    }
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.x += -1*i;
+                        gijun.origin.y += -1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x += -1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y -= -10 + 1*i;
+                            }
+                            gijun.origin.y -= -10;
+                            break;
+                        }
+                        gijun.origin.x -= -1*i;
+                        gijun.origin.y -= -1*i;
+                    }
+                    gijun.origin.y += -10;
                 }
             }
             if(key.s){
@@ -780,7 +922,39 @@
                     }
                 }
                 else{
-                    gijun.origin.x -= 10;
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.y += 1*i;
+                        gijun.origin.x += -1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y += 1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x -= -10 + 1*i;
+                            }
+                            gijun.origin.x -= -10;
+                            break;
+                        }
+                        gijun.origin.y -= 1*i;
+                        gijun.origin.x -= -1*i;
+                    }
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.y += -1*i;
+                        gijun.origin.x += -1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y += -1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x -= -10 + 1*i;
+                            }
+                            gijun.origin.x -= -10;
+                            break;
+                        }
+                        gijun.origin.y -= -1*i;
+                        gijun.origin.x -= -1*i;
+                    }
+                    gijun.origin.x += -10;
                 }
             }
             if(key.d){
@@ -791,6 +965,38 @@
                     }
                 }
                 else{
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.x += 1*i;
+                        gijun.origin.y += 1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x += 1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y -= 10 - 1*i;
+                            }
+                            gijun.origin.y -= 10;
+                            break;
+                        }
+                        gijun.origin.x -= 1*i;
+                        gijun.origin.y -= 1*i;
+                    }
+                    for (var i = 0; i < 7; i++) {
+                        gijun.origin.x += -1*i;
+                        gijun.origin.y += 1*i;
+                        if(!plcol()){
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].x += -1*i;
+                            }
+                            for (var j = 0; j < 8; j++) {
+                                gijun.point[j].y -= 10 - 1*i;
+                            }
+                            gijun.origin.y -= 10;
+                            break;
+                        }
+                        gijun.origin.x -= -1*i;
+                        gijun.origin.y -= 1*i;
+                    }
                     gijun.origin.y += 10;
                 }
             }
@@ -826,16 +1032,16 @@
                     surburmap_load_once =2;
                     
                     setInterval(repeat,1000/30);   
-                    setInterval(bfsstart,100);
+                    setInterval(bfsstart,50);
                 }
-                
-                while (surburmap_change.length) {
-                    var pop = surburmap_change.pop();
-                    surburmap[pop.x][pop.y][pop.z] = pop.b;
-                }   
-                console.log("bbb");
+                if(surburmap_change.length != 0){
+                    while (surburmap_change.length) {
+                        var pop = surburmap_change.pop();
+                        surburmap[pop.x][pop.y][pop.z] = pop.b;
+                    }   
 
-                writeMap('data',surburmap);
+                    writeMap('data',surburmap);
+                }
             }
         }
     </script>
