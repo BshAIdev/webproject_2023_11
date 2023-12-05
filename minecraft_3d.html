@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3d</title>
+    <title>마크짭</title>
 
     <style>
     html {
@@ -23,6 +23,92 @@
         background: #eee;
       }
     </style>
+    
+    <script type="module">
+
+        drowtext(1280/2,720/2-30,'000000',"click to start",'center');
+
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics.js";
+        import { getDatabase , ref, set,onValue  } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+        
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdPT 9bd1UtLCT8LQt_dRsyFXwp9zUuLD4",
+            authDomain: "test-45d62.firebaseapp.com",
+            databaseURL: "https://test-45d62-default-rtdb.firebaseio.com",
+            projectId: "test-45d62",
+            storageBucket: "test-45d62.appspot.com",
+            messagingSenderId: "1034841083055",
+            appId: "1:1034841083055:web:4465e832f1b951111a185a",
+            measurementId: "G-L0MCE1V75T"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        globalThis.writeUserData =  function(t,value){
+            set(ref(database, t),value);
+        }
+        globalThis.readUserData =  function(t){
+            var a;
+            onValue(ref(database, t), (snapshot) => {a = snapshot.val();});
+            return a;
+        }
+        globalThis.writeMap =  function(t,map){
+            var dum = -1;
+            var dum2 = '';
+            for (var i = 0; i < 100; i++) {
+                for (var j = 0; j < 100; j++) {
+                    for (var k = 0; k < 100; k++) {
+                        if(dum != -1){
+                            dum2 += String.fromCharCode(65 + dum*7+map[i][j][k]);
+                            dum = -1;
+                        }
+                        else{
+                            dum = map[i][j][k];
+                        }
+                    }
+                }
+            }
+            writeUserData(t,dum2);
+        }
+        globalThis.readMap =  function(){
+            readedmap = readUserData('data');
+            setTimeout(mapload,100);
+        }
+
+        globalThis.loadMap =  function(){
+            if(readedmap != undefined){
+                var dum2 = [];
+                for (var i = 0; i < readedmap.length; i++) {
+                    dum2.push(Math.floor((readedmap.charCodeAt(i)-65)/7));
+                    dum2.push((readedmap.charCodeAt(i)-65)%7);
+                }
+                var count = 0;
+                for (var i = 0; i < 100; i++) {
+                    for (var j = 0; j < 100; j++) {
+                        for (var k = 0; k < 100; k++) {
+                            surburmap[i][j][k] = dum2[count];
+                            count+=1;   
+                        }
+                    }
+                }
+                return 1;
+            }
+            else{
+                
+            return 0;
+            }
+        }
+    </script>
+
     <script>
         var key = {w:0,a:0,s:0,d:0,space:0,ctrl:0};
         var pl_blsu = [5,5,5,5,5,5];
@@ -40,179 +126,235 @@
             {x:-50,y:50,z:50}],origin:{x:0,y:0,z:0}};//기준이 되는 0,0,0위치의 블록, 위치는 카메라와의 상대 거리
 
         var bfs_list = [];
-        var randerrange = 20;
-
-        var img_grass = new Image();
-        img_grass.src = "https://i.etsystatic.com/10800838/r/il/fb4f68/2825858925/il_570xN.2825858925_s5dq.jpg";
-
-        var map = new Array(300);
-        for (var i = 0; i < 300; i++) {
-            map[i] = new Array(300);
-            for (var j = 0; j < 300; j++) {
-                map[i][j] = new Array(301);
-                for (var k = 0; k < 300; k++) {
-                    map[i][j][k] = 0;
-                    if(k == 155){
-                        map[i][j][k] = 1;
-                    }
-                    if(k > 155){
-                        map[i][j][k] = 2;
-                    }
-                    if(!getRandomInt(0,50)){
-                        map[i][j][k] = getRandomInt(0,7);
-                    }
+        var randerrange = 15;
+        var surburmap = new Array(100);
+        var readedmap;
+        var surburmap_change = [];
+        var surburmap_load_once = 0;
+            
+        var map = new Array(100);
+        for (var i = 0; i < 100; i++) {
+            map[i] = new Array(100);
+            surburmap[i] = new Array(100);
+            for (var j = 0; j < 100; j++) {
+                map[i][j] = new Array(100);
+                surburmap[i][j] = new Array(100);
+                for (var k = 0; k < 100; k++) {
+                    map[i][j][k] = 0;   
                 }
             }
         }
         
-        var map2 = new Array(300);
-        for (var i = 0; i < 300; i++) {
-            map2[i] = new Array(300);
-            for (var j = 0; j < 300; j++) {
-                map2[i][j] = new Array(301);
-                for (var k = 0; k < 300; k++) {
+        var map2 = new Array(100);
+        for (var i = 0; i < 100; i++) {
+            map2[i] = new Array(100);
+            for (var j = 0; j < 100; j++) {
+                map2[i][j] = new Array(100);
+                for (var k = 0; k < 100; k++) {
                     map2[i][j][k] = 0;
                 }
             }
         }
 
-        document.addEventListener('keydown', (event) => {
-                if (event.key == 's') {
-                    key.s = 1;
+        function newmap(){
+            for (var k = 0; k < 100; k++) {
+                for (var i = 0; i < 100; i++) {
+                    for (var j = 0; j < 100; j++) {
+                        map[i][j][k] = 0;
+                        if(k == 55){
+                            map[i][j][k] = 1;
+                        }
+                        if(k > 55){
+                            map[i][j][k] = 2;
+                        }
+                        if(!getRandomInt(0,50)){
+                            map[i][j][k] = getRandomInt(0,7);
+                        }
+                    }
                 }
-                if (event.key == 'w') {
-                    key.w = 1;
-                }
-                if (event.key == 'a') {
-                    key.a = 1;
-                }
-                if (event.key == 'd') {
-                    key.d = 1;
-                }
-                if (event.key == ' ') {
-                    key.space = 1;
-                }
-                if (event.keyCode == 17) {
-                    key.ctrl = 1;
-                }
-                if (event.key == '=') {
-                    randerrange += 1;
-                }
-                if (event.key == '-') {
-                    randerrange -= 1;
-                }
-                if (event.key == '1') {
-                    pl_item = 1;
-                }
-                if (event.key == '2') {
-                    pl_item = 2;
-                }
-                if (event.key == '3') {
-                    pl_item = 3;
-                }
-                if (event.key == '4') {
-                    pl_item = 4;
-                }
-                if (event.key == '5') {
-                    pl_item = 5;
-                }
-                if (event.key == '6') {
-                    pl_item = 6;
-                }
-            });
-            
+            }
+            writeMap('data',map);
+            console.log(1);
+        }
 
-            document.addEventListener('keyup', (event) => {
-                if (event.key == 's') {
-                    key.s = 0;
-                }
-                if (event.key == 'w') {
-                    key.w = 0;
-                }
-                if (event.key == 'a') {
-                    key.a = 0;
-                }
-                if (event.key == 'd') {
-                    key.d = 0;
-                }
-                if (event.key == ' ') {
-                    key.space = 0;
-                }
-                if (event.keyCode == 17) {
-                    key.ctrl = 0;
-                }
-            });
-
-            
-            document.addEventListener("mousemove", (event) => {
-                var mx = event.movementX;
-                var my = event.movementY;
+        function start(){
+            pointerlockon(document.getElementById("canvas"));
+            if(surburmap_load_once == 0){
                 
-                gijunanglechange(1,-camera.y);
-                gijunanglechange(0,mx/10*Math.PI/180);
-                gijunanglechange(1,camera.y);
+            drowrect(0,0,1280,720,'#eeeeee');
+            drowtext(1280/2,720/2-30,'#000000',"loading...",'center');
+            surburmap_load_once = 1;
+            
+            readMap();
+            setInterval(readMap,2000+getRandomInt(-100,100));
 
-                gijunanglechange(1,my/10*Math.PI/180);
+            document.addEventListener('keydown', (event) => {
+                    if (event.key == 's') {
+                        key.s = 1;
+                    }
+                    if (event.key == 'w') {
+                        key.w = 1;
+                    }
+                    if (event.key == 'a') {
+                        key.a = 1;
+                    }
+                    if (event.key == 'd') {
+                        key.d = 1;
+                    }
+                    if (event.key == ' ') {
+                        key.space = 1;
+                    }
+                    if (event.keyCode == 17) {
+                        key.ctrl = 1;
+                    }
+                    if (event.key == '=') {
+                        randerrange += 1;
+                    }
+                    if (event.key == '-') {
+                        randerrange -= 1;
+                    }
+                    if (event.key == '1') {
+                        pl_item = 1;
+                    }
+                    if (event.key == '2') {
+                        pl_item = 2;
+                    }
+                    if (event.key == '3') {
+                        pl_item = 3;
+                    }
+                    if (event.key == '4') {
+                        pl_item = 4;
+                    }
+                    if (event.key == '5') {
+                        pl_item = 5;
+                    }
+                    if (event.key == '6') {
+                        pl_item = 6;
+                    }
+                    if (event.key == 'r') {
+                        gijun = {point:[
+                            {x:-50,y:-50,z:-50},
+                            {x:50,y:-50,z:-50},
+                            {x:50,y:50,z:-50},
+                            {x:-50,y:50,z:-50},
+                            {x:-50,y:-50,z:50},
+                            {x:50,y:-50,z:50},
+                            {x:50,y:50,z:50},
+                            {x:-50,y:50,z:50}],origin:{x:0,y:0,z:0}};//기준이 되는 0,0,0위치의 블록, 위치는 카메라와의 상대 거리
+                        camera.y = 0;
+                        camera.x = 0;
+                        
+                    }
+                });
+                
+
+                document.addEventListener('keyup', (event) => {
+                    if (event.key == 's') {
+                        key.s = 0;
+                    }
+                    if (event.key == 'w') {
+                        key.w = 0;
+                    }
+                    if (event.key == 'a') {
+                        key.a = 0;
+                    }
+                    if (event.key == 'd') {
+                        key.d = 0;
+                    }
+                    if (event.key == ' ') {
+                        key.space = 0;
+                    }
+                    if (event.keyCode == 17) {
+                        key.ctrl = 0;
+                    }
+                });
 
                 
-                camera.x += mx/10*Math.PI/180;
-                camera.y += my/10*Math.PI/180;
-
-            },false);
-
-            document.addEventListener("mousedown", (event) => {
-                if(event.button == 0 && !key.ctrl){
-                    var dum = 0;
-                    while(plblocknum() == 0 && dum > -500){
-                        gijun.origin.x -= 10;
-                        dum -= 10;
-                    }
-                    if(dum > -500){
-                        gijunanglechange(1,-camera.y);
-                        gijunanglechange(0,-camera.x);
-                        pl_blsu[map[Math.ceil(-gijun.origin.x/100+150-0.5)][Math.ceil(-gijun.origin.y/100+150-0.5)][Math.ceil(-gijun.origin.z/100+150-0.5)]-1]+=1;
-                        map[Math.ceil(-gijun.origin.x/100+150-0.5)][Math.ceil(-gijun.origin.y/100+150-0.5)][Math.ceil(-gijun.origin.z/100+150-0.5)] = 0;
-                        gijunanglechange(0,camera.x);
-                        gijunanglechange(1,camera.y);
-                    }
-                    gijun.origin.x -= dum;
-                }
-                else if(event.button == 1 || (event.button == 0 && key.ctrl) && pl_blsu[pl_item-1] > 0){
-                    pl_blsu[pl_item-1] -= 1;
-                    var dum = 0;
-                    while(plblocknum() == 0 && dum > -500){
-                        gijun.origin.x -= 10;
-                        dum -= 10;
-                    }
-                    if(dum > -500){
-                        gijun.origin.x += 10;
-                        dum += 10;
-                        gijunanglechange(1,-camera.y);
-                        gijunanglechange(0,-camera.x);
-                        map[Math.ceil(-gijun.origin.x/100+150-0.5)][Math.ceil(-gijun.origin.y/100+150-0.5)][Math.ceil(-gijun.origin.z/100+150-0.5)] = pl_item;
-                        gijunanglechange(0,camera.x);
-                        gijunanglechange(1,camera.y);
-                    }
-                    gijun.origin.x -= dum;
+                document.addEventListener("mousemove", (event) => {
+                    var mx = event.movementX;
+                    var my = event.movementY;
+                    
                     gijunanglechange(1,-camera.y);
-                    if(plcol()){
-                        gijunanglechange(1,camera.y);
-                        gijun.origin.x += dum;
-                        gijunanglechange(1,-camera.y);
-                        gijunanglechange(0,-camera.x);
-                        map[Math.ceil(-gijun.origin.x/100+150-0.5)][Math.ceil(-gijun.origin.y/100+150-0.5)][Math.ceil(-gijun.origin.z/100+150-0.5)] = 0;
-                        pl_blsu[pl_item-1] += 1;
-                        gijunanglechange(0,camera.x);
-                        gijunanglechange(1,camera.y);
+                    gijunanglechange(0,mx/10*Math.PI/180);
+                    gijunanglechange(1,camera.y);
+
+                    gijunanglechange(1,my/10*Math.PI/180);
+
+                    
+                    camera.x += mx/10*Math.PI/180;
+                    camera.y += my/10*Math.PI/180;
+
+                    if(camera.y > 1.5){
+                        gijunanglechange(1,-camera.y+1.5);
+                        camera.y = 1.5;
+                    }
+                    if(camera.y < -1.5){
+                        gijunanglechange(1,-camera.y-1.5);
+                        camera.y = -1.5;
+                    }
+
+                },false);
+                
+                document.addEventListener("mousedown", (event) => {
+                    if(event.button == 0 && !key.ctrl){
+                        var dum = 0;
+                        while(plblocknum() == 0 && dum > -500){
+                            gijun.origin.x -= 10;
+                            dum -= 10;
+                        }
+                        if(dum > -500){
+                            gijunanglechange(1,-camera.y);
+                            gijunanglechange(0,-camera.x);
+                            pl_blsu[map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)]-1]+=1;
+                            map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+50-0.5),y:Math.ceil(-gijun.origin.y/100+50-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:0});
+                            gijunanglechange(0,camera.x);
+                            gijunanglechange(1,camera.y);
+                        }
                         gijun.origin.x -= dum;
                     }
-                    else{
-                        gijunanglechange(1,camera.y);
+                    else if((event.button == 2 || (event.button == 0 && key.ctrl)) && pl_blsu[pl_item-1] > 0){
+                        var dum = 0;
+                        while(plblocknum() == 0 && dum > -500){
+                            gijun.origin.x -= 10;
+                            dum -= 10;
+                        }
+                        if(dum > -500){
+                            gijun.origin.x += 10;
+                            dum += 10;
+                            gijunanglechange(1,-camera.y);
+                            gijunanglechange(0,-camera.x);
+                            map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = pl_item;
+                            surburmap[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = pl_item;
+                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+50-0.5),y:Math.ceil(-gijun.origin.y/100+50-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:pl_item});
+                            gijunanglechange(0,camera.x);
+                            gijunanglechange(1,camera.y);
+                            pl_blsu[pl_item-1] -= 1;
+                        }
+                        gijun.origin.x -= dum;
+                        gijunanglechange(1,-camera.y);
+                        if(plcol()){
+                            gijunanglechange(1,camera.y);
+                            gijun.origin.x += dum;
+                            gijunanglechange(1,-camera.y);
+                            gijunanglechange(0,-camera.x);
+                            map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
+                            surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+50-0.5),y:Math.ceil(-gijun.origin.y/100+50-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:0});
+                            pl_blsu[pl_item-1] += 1;
+                            gijunanglechange(0,camera.x);
+                            gijunanglechange(1,camera.y);
+                            gijun.origin.x -= dum;
+                        }
+                        else{
+                            gijunanglechange(1,camera.y);
+                        }
                     }
-                }
 
-            },false);
-
+                },false);
+            }
+        }
         //drawtri({x:1,y:2},{x:100,y:200},{x:150,y:500},'#FF00FF');
 
         function getRandomInt(min, max) {
@@ -222,7 +364,8 @@
         }
 
         function pointerlockon(element){
-
+            
+            console.log(1);
             element.requestPointerLock = element.requestPointerLock ||
                  element.mozRequestPointerLock ||
                  element.webkitRequestPointerLock;
@@ -305,6 +448,8 @@
             var ctx = canvas.getContext('2d');
 
             ctx.clearRect(0, 0, cnvs.width, cnvs.height);
+
+            
             /*
             if(Math.sqrt(gijun.point[0].x**2+gijun.point[0].y**2+gijun.point[0].z**2) < Math.sqrt(gijun.point[4].x**2+gijun.point[4].y**2+gijun.point[4].z**2)){
                 drawgijunpoint_tri(0,1,2,'#FA58F4');
@@ -358,10 +503,9 @@
         }
 
         function renderblock(x,y,z,c1,c2){
-            
-            x -= 150;
-            y -= 150;
-            z -= 150;
+            x -= 50;
+            y -= 50;
+            z -= 50;
 
             var x2,y2,z2;
             x2 = (gijun.point[1].x - gijun.point[0].x) * x + (gijun.point[2].x - gijun.point[1].x) * y + (gijun.point[5].x - gijun.point[1].x) * z;
@@ -373,6 +517,14 @@
                 gijun.point[i].y += y2;
                 gijun.point[i].z += z2;
             }
+
+            
+            gijunanglechange(1,-camera.y);
+            gijunanglechange(0,-camera.x);
+            var plxyz = [-(gijun.origin.x-50)/100,-(gijun.origin.y-50)/100,-(gijun.origin.z-50)/100];
+            gijunanglechange(0,camera.x);
+            gijunanglechange(1,camera.y);
+
 
             if(Math.sqrt(gijun.point[0].x**2+gijun.point[0].y**2+gijun.point[0].z**2) < Math.sqrt(gijun.point[4].x**2+gijun.point[4].y**2+gijun.point[4].z**2)){
                 drawgijunpoint_tri(0,1,2,c2);
@@ -388,35 +540,37 @@
                 drawgijunpoint_tri2(4,5,6,6,7,4,c1,20);
                 drawgijunpoint_tri2(4,6,7,6,4,5,c1,20);
             }
+            if(x != Math.floor(plxyz[0])){
+                if(Math.sqrt(gijun.point[0].x**2+gijun.point[0].y**2+gijun.point[0].z**2) > Math.sqrt(gijun.point[1].x**2+gijun.point[1].y**2+gijun.point[1].z**2)){
+                    drawgijunpoint_tri(1,2,5,c2);
+                    drawgijunpoint_tri(6,2,5,c2);
+                    
+                    drawgijunpoint_tri2(1,2,5,6,5,2,c1,20);
+                    drawgijunpoint_tri2(6,2,5,1,5,2,c1,20);
+                }
+                else{
+                    drawgijunpoint_tri(0,3,7,c2);
+                    drawgijunpoint_tri(0,4,7,c2);
+                    
+                    drawgijunpoint_tri2(0,3,7,7,4,0,c1,20);
+                    drawgijunpoint_tri2(0,4,7,7,3,0,c1,20);
+                }
+            }
+            if(y != Math.floor(plxyz[1])){
+                if(Math.sqrt(gijun.point[1].x**2+gijun.point[1].y**2+gijun.point[1].z**2) > Math.sqrt(gijun.point[2].x**2+gijun.point[2].y**2+gijun.point[2].z**2)){
+                    drawgijunpoint_tri(2,3,7,c2);
+                    drawgijunpoint_tri(2,7,6,c2);
 
-            if(Math.sqrt(gijun.point[0].x**2+gijun.point[0].y**2+gijun.point[0].z**2) > Math.sqrt(gijun.point[1].x**2+gijun.point[1].y**2+gijun.point[1].z**2)){
-                drawgijunpoint_tri(1,2,5,c2);
-                drawgijunpoint_tri(6,2,5,c2);
-                
-                drawgijunpoint_tri2(1,2,5,6,5,2,c1,20);
-                drawgijunpoint_tri2(6,2,5,1,5,2,c1,20);
-            }
-            else{
-                drawgijunpoint_tri(0,3,7,c2);
-                drawgijunpoint_tri(0,4,7,c2);
-                
-                drawgijunpoint_tri2(0,3,7,7,4,0,c1,20);
-                drawgijunpoint_tri2(0,4,7,7,3,0,c1,20);
-            }
-            
-            if(Math.sqrt(gijun.point[1].x**2+gijun.point[1].y**2+gijun.point[1].z**2) > Math.sqrt(gijun.point[2].x**2+gijun.point[2].y**2+gijun.point[2].z**2)){
-                drawgijunpoint_tri(2,3,7,c2);
-                drawgijunpoint_tri(2,7,6,c2);
-
-                drawgijunpoint_tri2(2,7,6,7,2,3,c1,20);
-                drawgijunpoint_tri2(2,3,7,7,6,2,c1,20);
-            }
-            else{
-                drawgijunpoint_tri(0,1,5,c2);
-                drawgijunpoint_tri(0,5,4,c2);
-                
-                drawgijunpoint_tri2(0,1,5,5,4,0,c1,20);
-                drawgijunpoint_tri2(0,5,4,5,0,1,c1,20);
+                    drawgijunpoint_tri2(2,7,6,7,2,3,c1,20);
+                    drawgijunpoint_tri2(2,3,7,7,6,2,c1,20);
+                }
+                else{
+                    drawgijunpoint_tri(0,1,5,c2);
+                    drawgijunpoint_tri(0,5,4,c2);
+                    
+                    drawgijunpoint_tri2(0,1,5,5,4,0,c1,20);
+                    drawgijunpoint_tri2(0,5,4,5,0,1,c1,20);
+                }
             }
 
             for (var i = 0; i < 8; i++) {
@@ -436,13 +590,13 @@
             }
         }
 
-        function drowtext(x,y,c,t){
+        function drowtext(x,y,c,t,textAlign){
             var canvas = document.getElementById("canvas");
             if (canvas.getContext) {
                 var ctx = canvas.getContext("2d");
 
                 ctx.font = "bold 25px Gulim";
-                ctx.textAlign = 'right';
+                ctx.textAlign = textAlign;
                 ctx.fillStyle = c;
                 ctx.fillText(t,Math.round(x), Math.round(y));
             }
@@ -456,16 +610,18 @@
             drowrect(1280/2-75*6/2+75*(pl_item-1), 720-100, 75, 75,'#F2F2F2');
             var dumli = ['#A5DF00','#DF7401','#6E6E6E','#DF0101','#01DF01','#013ADF'];
             for (var i = 0; i < 6; i++) {
+                if(pl_blsu[i] != 0){
                 drowrect(1280/2-75*6/2+25/2+75*i, 720-100+25/2, 50, 50,dumli[i]);
-                drowtext(1280/2-75*6/2-25/2+75*(i+1),720-100+25/2+45,'#FFFFFF',pl_blsu[i]);
+                drowtext(1280/2-75*6/2-25/2+75*(i+1),720-100+25/2+45,'#FFFFFF',pl_blsu[i],'right');
+                }
             }
                 
         }
 
         function bfsstart(){
-            for (var i = 0; i < 300; i++) {
-                for (var j = 0; j < 300; j++) {
-                    for (var k = 0; k < 300; k++) {
+            for (var i = 0; i < 100; i++) {
+                for (var j = 0; j < 100; j++) {
+                    for (var k = 0; k < 100; k++) {
                         map2[i][j][k] = 0;
                     }
                 }
@@ -473,7 +629,7 @@
             bfs_list = [];
             gijunanglechange(1,-camera.y);
             gijunanglechange(0,-camera.x);
-            var bfs_list2 = [[-gijun.origin.x/100+150,-gijun.origin.y/100+150,-gijun.origin.z/100+150,randerrange]];
+            var bfs_list2 = [[-(gijun.origin.x+50)/100+50,-(gijun.origin.y+50)/100+50,-(gijun.origin.z+50)/100+50,randerrange]];
             while(bfs_list2.length){
                 var dum = bfs_list2.length;
                 for (var i = 0; i < dum; i++) {
@@ -486,9 +642,10 @@
 
                     var dumli = [[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]]
                     for (var j = 0; j < 6; j++) {
-                        if(range-1 != 0 && x+dumli[j][0] >= 0 && x+dumli[j][0] < 300 && y+dumli[j][1] >= 0 && y+dumli[j][1] < 300 && z+dumli[j][2] >= 0 && z+dumli[j][2] < 300 && map2[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] == 0){
+                        if(range-1 != 0 && x+dumli[j][0] >= 0 && x+dumli[j][0] < 100 && y+dumli[j][1] >= 0 && y+dumli[j][1] < 100 && z+dumli[j][2] >= 0 && z+dumli[j][2] < 100 && map2[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] == 0){
                             if(map[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] == 0)bfs_list2.push([x+dumli[j][0],y+dumli[j][1],z+dumli[j][2],range-1]);
                             map2[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] = 1;
+                            map[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])] = surburmap[Math.ceil(x+dumli[j][0])][Math.ceil(y+dumli[j][1])][Math.ceil(z+dumli[j][2])];
                             bfs_list.push({x:Math.ceil(x+dumli[j][0]),y:Math.ceil(y+dumli[j][1]),z:Math.ceil(z+dumli[j][2])});
                         }
                     }
@@ -546,11 +703,11 @@
             gijunanglechange(0,-camera.x);
             var a = 0;
             for (var i = 0; i < 3; i++) {
-                if(map[Math.ceil(-gijun.origin.x/100+150-0.5)][Math.ceil(-gijun.origin.y/100+150-0.5)][Math.ceil(-gijun.origin.z/100+150-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+150-0.5-0.4)][Math.ceil(-gijun.origin.y/100+150-0.5-0.4)][Math.ceil(-gijun.origin.z/100+150-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+150-0.5+0.4)][Math.ceil(-gijun.origin.y/100+150-0.5-0.4)][Math.ceil(-gijun.origin.z/100+150-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+150-0.5-0.4)][Math.ceil(-gijun.origin.y/100+150-0.5+0.4)][Math.ceil(-gijun.origin.z/100+150-0.5+i*0.9)] != 0){a = 1;}
-                if(map[Math.ceil(-gijun.origin.x/100+150-0.5+0.4)][Math.ceil(-gijun.origin.y/100+150-0.5+0.4)][Math.ceil(-gijun.origin.z/100+150-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+50-0.5-0.4)][Math.ceil(-gijun.origin.y/100+50-0.5-0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+50-0.5+0.4)][Math.ceil(-gijun.origin.y/100+50-0.5-0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+50-0.5-0.4)][Math.ceil(-gijun.origin.y/100+50-0.5+0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
+                if(map[Math.ceil(-gijun.origin.x/100+50-0.5+0.4)][Math.ceil(-gijun.origin.y/100+50-0.5+0.4)][Math.ceil(-gijun.origin.z/100+50-0.5+i*0.9)] != 0){a = 1;}
             }
             gijunanglechange(0,camera.x);
             return a;
@@ -559,7 +716,7 @@
         function plblocknum(){
             gijunanglechange(1,-camera.y);
             gijunanglechange(0,-camera.x);
-            var a = map[Math.ceil(-gijun.origin.x/100+150-0.5)][Math.ceil(-gijun.origin.y/100+150-0.5)][Math.ceil(-gijun.origin.z/100+150-0.5)];
+            var a = map[Math.ceil(-gijun.origin.x/100+50-0.5)][Math.ceil(-gijun.origin.y/100+50-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)];
             gijunanglechange(0,camera.x);
             gijunanglechange(1,camera.y);
             return a;
@@ -580,10 +737,14 @@
                         gijun.point[i].z += -2*((plg<0)*2-1);
                     }
                 }
-                
-                plg=0;
-                if(key.space){
-                    plg = -20;
+                if(plg>=0){
+                    plg=0;
+                    if(key.space){
+                        plg = -20;
+                    }
+                }
+                else{
+                    plg=0;
                 }
             }
 
@@ -637,19 +798,53 @@
         }
 
         function repeat(){
-            move();
-            render();
+            if(surburmap_load_once == 2){
+                surburmap_load_once = 3;
+
+                camera.y = 0;
+                camera.x = 0;
+                
+                gijun = {point:[
+                    {x:-50,y:-50,z:-50},
+                    {x:50,y:-50,z:-50},
+                    {x:50,y:50,z:-50},
+                    {x:-50,y:50,z:-50},
+                    {x:-50,y:-50,z:50},
+                    {x:50,y:-50,z:50},
+                    {x:50,y:50,z:50},
+                    {x:-50,y:50,z:50}],origin:{x:0,y:0,z:0}};//기준이 되는 0,0,0위치의 블록, 위치는 카메라와의 상대 거리
+            }
+            if(surburmap_load_once == 3){
+                move();
+                render();
+            }
+        }
+        function mapload(){
+            if(loadMap()){
+                if(surburmap_load_once == 1) {
+                console.log('loading!');
+                    surburmap_load_once =2;
+                    
+                    setInterval(repeat,1000/30);   
+                    setInterval(bfsstart,100);
+                }
+                
+                while (surburmap_change.length) {
+                    var pop = surburmap_change.pop();
+                    surburmap[pop.x][pop.y][pop.z] = pop.b;
+                }   
+                console.log("bbb");
+
+                writeMap('data',surburmap);
+            }
         }
     </script>
 
 </head>
 <body scroll="no">
-    <canvas id="canvas" width="1280px" height="720" onclick='pointerlockon(document.getElementById("canvas"));'>
+    <canvas id="canvas" width="1280px" height="720" onclick='start()'>
 
     </canvas>
-    <script>
-        setInterval(repeat,1000/30);   
-        setInterval(bfsstart,1000);     
-    </script>
+
 </body>
 </html>
