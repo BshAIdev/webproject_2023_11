@@ -132,6 +132,9 @@
         var readedmap;
         var surburmap_change = [];
         var surburmap_load_once = 0;
+
+        var cursurposition = {x:0,y:0,z:0};
+        var cursurposition_opacity = 0;
             
         var map = new Array(50);
         for (var i = 0; i < 50; i++) {
@@ -225,8 +228,8 @@
             drowrect(0,0,1280,720,'#eeeeee');
             drowtext(1280/2,720/2-30,'#000000',"loading...",'center');
             surburmap_load_once = 1;
-            
             readMap();
+            setTimeout(readMap,1000);
             setInterval(readMap,10000+getRandomInt(-1000,1000));
 
             document.addEventListener('keydown', (event) => {
@@ -346,7 +349,7 @@
                         if(dum > -500){
                             gijunanglechange(1,-camera.y);
                             gijunanglechange(0,-camera.x);
-                            pl_blsu[map[Math.ceil(-gijun.origin.x/1002550-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)]-1]+=1;
+                            pl_blsu[map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)]-1]+=1;
                             map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
                             surburmap[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)] = 0;
                             surburmap_change.push({x:Math.ceil(-gijun.origin.x/100+25-0.5),y:Math.ceil(-gijun.origin.y/100+25-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5),b:0});
@@ -414,7 +417,7 @@
             element.requestPointerLock();
         }
         
-        function drawtri(vt21,vt22,vt23,color) {
+        function drawtri(vt21,vt22,vt23,color,opacity) {
             var canvas = document.getElementById("canvas");
             if (canvas.getContext) {
                 var ctx = canvas.getContext("2d");
@@ -424,20 +427,22 @@
                 ctx.lineTo(vt22.x, vt22.y);
                 ctx.lineTo(vt23.x, vt23.y);
                 ctx.fillStyle = color;
+                ctx.globalAlpha = opacity;
                 ctx.fill();
                 ctx.closePath();
+                ctx.globalAlpha = 1;
             }
         }
 
-        function drawgijunpoint_tri(a,b,c,color){
+        function drawgijunpoint_tri(a,b,c,color,opacity){
             if(gijun.point[a].x > 0 && gijun.point[b].x > 0 && gijun.point[c].x > 0){
                 drawtri(
                     {x:gijun.point[a].y*500/gijun.point[a].x+1280/2,y:gijun.point[a].z*500/gijun.point[a].x+720/2},
                     {x:gijun.point[b].y*500/gijun.point[b].x+1280/2,y:gijun.point[b].z*500/gijun.point[b].x+720/2},
-                    {x:gijun.point[c].y*500/gijun.point[c].x+1280/2,y:gijun.point[c].z*500/gijun.point[c].x+720/2},color);
+                    {x:gijun.point[c].y*500/gijun.point[c].x+1280/2,y:gijun.point[c].z*500/gijun.point[c].x+720/2},color,opacity);
             }
         }
-        function drawgijunpoint_tri2(a,b,c,d,e,f,color,dum){
+        function drawgijunpoint_tri2(a,b,c,d,e,f,color,dum,opacity){
             if(gijun.point[a].x > 0 && gijun.point[b].x > 0 && gijun.point[c].x > 0){
                 
                 var gijunhis = {point:[
@@ -471,7 +476,7 @@
                 drawtri(
                     {x:gijun.point[a].y*500/gijun.point[a].x+1280/2,y:gijun.point[a].z*500/gijun.point[a].x+720/2},
                     {x:gijun.point[b].y*500/gijun.point[b].x+1280/2,y:gijun.point[b].z*500/gijun.point[b].x+720/2},
-                    {x:gijun.point[c].y*500/gijun.point[c].x+1280/2,y:gijun.point[c].z*500/gijun.point[c].x+720/2},color);
+                    {x:gijun.point[c].y*500/gijun.point[c].x+1280/2,y:gijun.point[c].z*500/gijun.point[c].x+720/2},color,opacity);
 
                 for (var i = 0; i < 8; i++) {
                     gijun.point[i].x = gijunhis.point[i].x;
@@ -548,6 +553,10 @@
         }
 
         function renderblock(x,y,z,c1,c2){
+            var xhis = x;
+            var yhis = y;
+            var zhis = z;
+
             x -= 25;
             y -= 25;
             z -= 50;
@@ -572,33 +581,53 @@
 
 
             if(Math.sqrt(gijun.point[0].x**2+gijun.point[0].y**2+gijun.point[0].z**2) < Math.sqrt(gijun.point[4].x**2+gijun.point[4].y**2+gijun.point[4].z**2)){
-                drawgijunpoint_tri(0,1,2,c2);
-                drawgijunpoint_tri(0,2,3,c2);
+                drawgijunpoint_tri(0,1,2,c2,1);
+                drawgijunpoint_tri(0,2,3,c2,1);
 
-                drawgijunpoint_tri2(0,1,2,2,3,0,c1,20);
-                drawgijunpoint_tri2(0,2,3,2,0,1,c1,20);
+                drawgijunpoint_tri2(0,1,2,2,3,0,c1,20,1);
+                drawgijunpoint_tri2(0,2,3,2,0,1,c1,20,1);
+
+                if(xhis == cursurposition.x && yhis == cursurposition.y && zhis == cursurposition.z){
+                    drawgijunpoint_tri(0,1,2,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                    drawgijunpoint_tri(0,2,3,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                }
             }
             else{
-                drawgijunpoint_tri(4,5,6,c2);
-                drawgijunpoint_tri(4,6,7,c2);
+                drawgijunpoint_tri(4,6,7,c2,1);
+                drawgijunpoint_tri(4,5,6,c2,1);
 
-                drawgijunpoint_tri2(4,5,6,6,7,4,c1,20);
-                drawgijunpoint_tri2(4,6,7,6,4,5,c1,20);
+                drawgijunpoint_tri2(4,5,6,6,7,4,c1,20,1);
+                drawgijunpoint_tri2(4,6,7,6,4,5,c1,20,1);
+
+                if(xhis == cursurposition.x && yhis == cursurposition.y && zhis == cursurposition.z){
+                    drawgijunpoint_tri(4,6,7,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                    drawgijunpoint_tri(4,5,6,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                }
             }
             if(x != Math.floor(plxyz[0])){
                 if(Math.sqrt(gijun.point[0].x**2+gijun.point[0].y**2+gijun.point[0].z**2) > Math.sqrt(gijun.point[1].x**2+gijun.point[1].y**2+gijun.point[1].z**2)){
-                    drawgijunpoint_tri(1,2,5,c2);
-                    drawgijunpoint_tri(6,2,5,c2);
+                    drawgijunpoint_tri(1,2,5,c2,1);
+                    drawgijunpoint_tri(6,2,5,c2,1);
                     
-                    drawgijunpoint_tri2(1,2,5,6,5,2,c1,20);
-                    drawgijunpoint_tri2(6,2,5,1,5,2,c1,20);
+                    drawgijunpoint_tri2(1,2,5,6,5,2,c1,20,1);
+                    drawgijunpoint_tri2(6,2,5,1,5,2,c1,20,1);
+
+                    if(xhis == cursurposition.x && yhis == cursurposition.y && zhis == cursurposition.z){
+                        drawgijunpoint_tri(1,2,5,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                        drawgijunpoint_tri(6,2,5,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                    }
                 }
                 else{
-                    drawgijunpoint_tri(0,3,7,c2);
-                    drawgijunpoint_tri(0,4,7,c2);
+                    drawgijunpoint_tri(0,3,7,c2,1);
+                    drawgijunpoint_tri(0,4,7,c2,1);
                     
-                    drawgijunpoint_tri2(0,3,7,7,4,0,c1,20);
-                    drawgijunpoint_tri2(0,4,7,7,3,0,c1,20);
+                    drawgijunpoint_tri2(0,3,7,7,4,0,c1,20,1);
+                    drawgijunpoint_tri2(0,4,7,7,3,0,c1,20,1);
+
+                    if(xhis == cursurposition.x && yhis == cursurposition.y && zhis == cursurposition.z){
+                        drawgijunpoint_tri(0,3,7,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                        drawgijunpoint_tri(0,4,7,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                    }
                 }
             }
             if(y != Math.floor(plxyz[1])){
@@ -606,15 +635,25 @@
                     drawgijunpoint_tri(2,3,7,c2);
                     drawgijunpoint_tri(2,7,6,c2);
 
-                    drawgijunpoint_tri2(2,7,6,7,2,3,c1,20);
-                    drawgijunpoint_tri2(2,3,7,7,6,2,c1,20);
+                    drawgijunpoint_tri2(2,7,6,7,2,3,c1,20,1);
+                    drawgijunpoint_tri2(2,3,7,7,6,2,c1,20,1);
+
+                    if(xhis == cursurposition.x && yhis == cursurposition.y && zhis == cursurposition.z){
+                        drawgijunpoint_tri(2,3,7,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                        drawgijunpoint_tri(2,7,6,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                    }
                 }
                 else{
                     drawgijunpoint_tri(0,1,5,c2);
                     drawgijunpoint_tri(0,5,4,c2);
                     
-                    drawgijunpoint_tri2(0,1,5,5,4,0,c1,20);
-                    drawgijunpoint_tri2(0,5,4,5,0,1,c1,20);
+                    drawgijunpoint_tri2(0,1,5,5,4,0,c1,20,1);
+                    drawgijunpoint_tri2(0,5,4,5,0,1,c1,20,1);
+
+                    if(xhis == cursurposition.x && yhis == cursurposition.y && zhis == cursurposition.z){
+                        drawgijunpoint_tri(0,1,5,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                        drawgijunpoint_tri(0,5,4,'#FFFFFF',0.5+Math.sin(cursurposition_opacity)/4);
+                    }
                 }
             }
 
@@ -794,7 +833,12 @@
         function plblocknum(){
             gijunanglechange(1,-camera.y);
             gijunanglechange(0,-camera.x);
-            var a = map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)];
+            var a = 0;
+            if(Math.ceil(-gijun.origin.x/100+25-0.5) > -1 && Math.ceil(-gijun.origin.y/100+25-0.5) > -1 && Math.ceil(-gijun.origin.z/100+50-0.5) > -1){
+                if(Math.ceil(-gijun.origin.x/100+25-0.5) < 50 && Math.ceil(-gijun.origin.y/100+25-0.5) < 50 && Math.ceil(-gijun.origin.z/100+50-0.5) < 100){
+                    a = map[Math.ceil(-gijun.origin.x/100+25-0.5)][Math.ceil(-gijun.origin.y/100+25-0.5)][Math.ceil(-gijun.origin.z/100+50-0.5)];
+                }
+            }
             gijunanglechange(0,camera.x);
             gijunanglechange(1,camera.y);
             return a;
@@ -1003,6 +1047,28 @@
             gijunanglechange(1,camera.y);
         }
 
+        function cursurpos(){
+            cursurposition_opacity += 0.1;
+            if(cursurposition_opacity > Math.PI){
+                cursurposition_opacity -= Math.PI;
+            }
+            var dum = 0;
+            while(plblocknum() == 0 && dum > -500){
+                gijun.origin.x -= 10;
+                dum -= 10;
+            }
+            cursurposition = {x:-1,y:-1,z:-1};
+            if(dum > -500){
+                gijunanglechange(1,-camera.y);
+                gijunanglechange(0,-camera.x);
+                cursurposition = {x:Math.ceil(-gijun.origin.x/100+25-0.5),y:Math.ceil(-gijun.origin.y/100+25-0.5),z:Math.ceil(-gijun.origin.z/100+50-0.5)};
+                gijunanglechange(0,camera.x);
+                gijunanglechange(1,camera.y);
+
+            }
+            gijun.origin.x -= dum;
+        }
+
         function repeat(){
             if(surburmap_load_once == 2){
                 surburmap_load_once = 3;
@@ -1021,6 +1087,7 @@
                     {x:-50,y:50,z:50}],origin:{x:0,y:0,z:0}};//기준이 되는 0,0,0위치의 블록, 위치는 카메라와의 상대 거리
             }
             if(surburmap_load_once == 3){
+                cursurpos();
                 move();
                 render();
             }
